@@ -3,4 +3,5 @@ Makefile.PL
 MANIFEST
 README
 t/local.t
+testall.pl
 lib/Sys/Hostname/Long.pm
