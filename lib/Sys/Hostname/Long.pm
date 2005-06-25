@@ -11,7 +11,7 @@ use Sys::Hostname;
 # Use perl < 5.6 compatible methods for now, change to 'our' soon.
 use vars qw(@EXPORT $VERSION $hostlong %dispatch $lastdispatch);
 @EXPORT  = qw/ hostname_long /;
-$VERSION = '1.2';
+$VERSION = '1.3';
 
 %dispatch = (
 
@@ -72,11 +72,23 @@ $VERSION = '1.2';
 		'title' => 'Execute "hostname --fqdn"',
 		'description' => '',
 		'exec' => sub {
-			my $tmp = `hostname --fqdn`;
+			# Skip for Solaris, and only run as non-root
+			my $tmp = `su nobody -c "hostname --fqdn"`;
 			$tmp =~ tr/\0\r\n//d;
 			return $tmp;
 		},
 	},
+
+	'exec_hostname_domainname' => {
+		'title' => 'Execute "hostname" and "domainname"',
+		'description' => '',
+		'exec' => sub {
+			my $tmp = `hostname` . '.' . `domainname`;
+			$tmp =~ tr/\0\r\n//d;
+			return $tmp;
+		},
+	},
+
 
 	'network' => {
 		'title' => 'Network Socket hostname (not DNS)',
@@ -166,6 +178,9 @@ sub hostname_long {
 		# (covered above) } elsif ($^O eq "darwin") {
 		#	$hostlong = dispatcher('uname');
 
+		} elsif ($^O eq 'solaris') {
+			$hostlong = dispatcher('exec_hostname_domainname');
+ 
 		} else {
 			$hostlong = dispatcher('exec_hostname_fqdn');
 		}
@@ -233,7 +248,7 @@ This is the original list of platforms tested.
 	Linux 		Linux UNIX OS			OK
 			Sparc				OK
 	HPUX		H.P. Unix 10?			Not Tested
-	Solaris		SUN Solaris 7?			OK
+	Solaris		SUN Solaris 7?			OK (now)
 	Irix		SGI Irix 5?			Not Tested
 	FreeBSD		FreeBSD				OK
 
@@ -473,6 +488,7 @@ Contributions
 
 	David Dick
 	Graeme Hart
+	Piotr Klaban
 
 	* Extra code from G
 	* Dispatch table
@@ -492,7 +508,7 @@ Scott Penrose E<lt>F<scottp@dd.com.au>E<gt>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2001,2004 Scott Penrose. All rights reserved.
+Copyright (c) 2001,2004,2005 Scott Penrose. All rights reserved.
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
