@@ -11,7 +11,7 @@ use Sys::Hostname;
 # Use perl < 5.6 compatible methods for now, change to 'our' soon.
 use vars qw(@EXPORT $VERSION $hostlong %dispatch $lastdispatch);
 @EXPORT  = qw/ hostname_long /;
-$VERSION = '1.3';
+$VERSION = '1.4';
 
 %dispatch = (
 
@@ -73,7 +73,12 @@ $VERSION = '1.3';
 		'description' => '',
 		'exec' => sub {
 			# Skip for Solaris, and only run as non-root
-			my $tmp = `su nobody -c "hostname --fqdn"`;
+			my $tmp;
+			if ($< == 0) {
+				$tmp = `su nobody -c "hostname --fqdn"`;
+			} else {
+				$tmp = `hostname --fqdn`;
+			}
 			$tmp =~ tr/\0\r\n//d;
 			return $tmp;
 		},
